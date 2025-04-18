@@ -1,0 +1,33 @@
+# Node
+node_modules/
+dist/
+.env.local
+.env.*.local
+
+# Build artifacts
+build/
+.vite/
+*.log
+
+# Go
+/bin/
+/pkg/
+/*.exe
+*.test
+*.out
+
+# Docker
+*.env
+docker-compose.override.yml
+
+# OS/System
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.sw?
+
+# Git
+*.orig
