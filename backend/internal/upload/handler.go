@@ -1,58 +1,70 @@
 package upload
 
 import (
-    "context"
-    "fmt"
-    "io"
-    "net/http"
-    "os"
+	"fmt"
+	"log"
+	"net/http"
+	"time"
 
-    "github.com/minio/minio-go/v7"
-    "github.com/minio/minio-go/v7/pkg/credentials"
+	"context"
+
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
+var minioClient *minio.Client
+
+func init() {
+	var err error
+	minioClient, err = minio.New("minio:9000", &minio.Options{
+		Creds:  credentials.NewStaticV4("minio", "minio123", ""),
+		Secure: false,
+	})
+	if err != nil {
+		log.Fatalf("❌ Error conectando a MinIO: %v", err)
+	}
+
+	ctx := context.Background()
+	exists, err := minioClient.BucketExists(ctx, "mybucket")
+	if err != nil {
+		log.Fatalf("❌ Error comprobando bucket: %v", err)
+	}
+	if !exists {
+		err := minioClient.MakeBucket(ctx, "mybucket", minio.MakeBucketOptions{})
+		if err != nil {
+			log.Fatalf("❌ Error creando bucket: %v", err)
+		}
+	}
+
+	log.Println("✅ MinIO inicializado correctamente")
+}
+
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
-    r.ParseMultipartForm(10 << 20) // 10MB max
+	ctx := context.Background()
 
-    file, handler, err := r.FormFile("file")
-    if err != nil {
-        http.Error(w, "Invalid file", http.StatusBadRequest)
-        return
-    }
-    defer file.Close()
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		log.Printf("❌ Error leyendo archivo: %v", err)
+		http.Error(w, "Archivo inválido", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
 
-    tmp, err := os.CreateTemp("", "upload-*")
-    if err != nil {
-        http.Error(w, "Temp error", http.StatusInternalServerError)
-        return
-    }
-    defer os.Remove(tmp.Name())
+	objectName := fmt.Sprintf("upload_%d_%s", time.Now().Unix(), header.Filename)
 
-    _, err = io.Copy(tmp, file)
-    if err != nil {
-        http.Error(w, "Copy error", http.StatusInternalServerError)
-        return
-    }
+	uploadInfo, err := minioClient.PutObject(ctx, "mybucket", objectName, file, header.Size, minio.PutObjectOptions{
+		ContentType: header.Header.Get("Content-Type"),
+	})
+	if err != nil {
+		log.Printf("❌ Error subiendo a MinIO: %v", err)
+		http.Error(w, "Error interno al subir", http.StatusInternalServerError)
+		return
+	}
 
-    tmp.Seek(0, io.SeekStart)
+	publicURL := fmt.Sprintf("http://localhost:9000/mybucket/%s", objectName)
 
-    minioClient, err := minio.New("localhost:9000", &minio.Options{
-        Creds:  credentials.NewStaticV4("minio", "minio123", ""),
-        Secure: false,
-    })
-    if err != nil {
-        http.Error(w, "MinIO error", http.StatusInternalServerError)
-        return
-    }
+	log.Printf("✅ Archivo subido: %+v", uploadInfo)
 
-    objectName := handler.Filename
-    _, err = minioClient.FPutObject(context.Background(), "mybucket", objectName, tmp.Name(), minio.PutObjectOptions{ContentType: handler.Header.Get("Content-Type")})
-    if err != nil {
-        http.Error(w, "Upload failed", http.StatusInternalServerError)
-        return
-    }
-
-    url := fmt.Sprintf("http://localhost:9000/mybucket/%s", objectName)
-    w.Header().Set("Content-Type", "application/json")
-    w.Write([]byte(fmt.Sprintf(`{"url":"%s"}`, url)))
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(fmt.Sprintf(`{"url":"%s"}`, publicURL)))
 }

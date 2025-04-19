@@ -34,8 +34,11 @@ type Article struct {
 
 // 📥 Crear artículo (requiere JWT)
 func CreateArticleHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("📩 Nuevo artículo recibido: %+v", r)
+
 	var article Article
 	if err := json.NewDecoder(r.Body).Decode(&article); err != nil {
+		log.Println(err.Error())
 		http.Error(w, "Invalid body", http.StatusBadRequest)
 		return
 	}
@@ -47,6 +50,7 @@ func CreateArticleHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := Collection.InsertOne(context.Background(), article)
 	if err != nil {
+		log.Println(err.Error())
 		http.Error(w, "DB error", http.StatusInternalServerError)
 		return
 	}
@@ -60,6 +64,7 @@ func CreateArticleHandler(w http.ResponseWriter, r *http.Request) {
 func ListArticlesHandler(w http.ResponseWriter, r *http.Request) {
 	cursor, err := Collection.Find(context.Background(), bson.M{})
 	if err != nil {
+		log.Println(err.Error())
 		http.Error(w, "DB error", http.StatusInternalServerError)
 		return
 	}
@@ -82,6 +87,7 @@ func GetMyArticlesHandler(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("user_id").(int)
 	cursor, err := Collection.Find(context.Background(), bson.M{"author_id": userID})
 	if err != nil {
+		log.Println(err.Error())
 		http.Error(w, "DB error", http.StatusInternalServerError)
 		return
 	}
@@ -104,6 +110,7 @@ func UpdateArticleHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
+		log.Println(err.Error())
 		http.Error(w, "Invalid ID", http.StatusBadRequest)
 		return
 	}
@@ -112,6 +119,7 @@ func UpdateArticleHandler(w http.ResponseWriter, r *http.Request) {
 
 	var payload Article
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		log.Println(err.Error())
 		http.Error(w, "Invalid body", http.StatusBadRequest)
 		return
 	}

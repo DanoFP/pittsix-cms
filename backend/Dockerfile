@@ -1,13 +1,19 @@
-# --- Backend Dockerfile ---
-FROM golang:1.22 AS builder
+# Etapa de build
+FROM golang:1.23 AS builder
 
 WORKDIR /app
+
+# Copiamos todo el código fuente
 COPY . .
-RUN go mod download
-RUN go build -o server main.go
 
-FROM gcr.io/distroless/base-debian11
+# Compilamos un binario completamente estático
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /app/server ./api
+
+# Imagen final liviana y segura
+FROM gcr.io/distroless/static-debian11
+
 WORKDIR /app
-COPY --from=builder /app/server .
-COPY --from=builder /app/configs ./configs
+COPY --from=builder /app/server /app/server
+
+# Ejecutamos el binario
 CMD ["/app/server"]

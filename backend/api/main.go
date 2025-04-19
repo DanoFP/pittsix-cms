@@ -15,6 +15,9 @@ import (
 func main() {
 	mux := http.NewServeMux()
 	mongoClient := db.ConnectMongo()
+	psql := db.InitPostgres()
+	defer psql.Close()
+
 	articleCollection := mongoClient.Database("pittsix").Collection("articles")
 	articles.Init(articleCollection)
 
@@ -22,8 +25,8 @@ func main() {
 		w.Write([]byte("OK"))
 	})
 
-	mux.HandleFunc("/auth/register", auth.RegisterHandler)
 	mux.HandleFunc("/auth/login", auth.LoginHandler)
+	mux.HandleFunc("/auth/register", auth.RegisterHandler)
 
 	// Artículos
 	articles.RegisterHandlers(mux)
