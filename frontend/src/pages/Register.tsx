@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import API from "../api/axios";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -8,9 +8,9 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:8080/auth/register", { email, password });
+      await API.post("/auth/register", { email, password });
       alert("Usuario creado. Ahora podés iniciar sesión.");
-    } catch {
+    } catch (err) {
       alert("Error al registrarse");
     }
   };
