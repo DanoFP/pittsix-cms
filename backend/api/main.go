@@ -34,7 +34,12 @@ func main() {
 	upload.RegisterHandlers(mux)
 
 	handler := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173", "http://3.137.192.116"},
+		AllowedOrigins: []string{"http://localhost:5173",
+			"http://3.137.192.116",
+			"http://pittsix.com",
+			"https://pittsix.com",
+			"http://www.pittsix.com",
+			"https://www.pittsix.com"},
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
