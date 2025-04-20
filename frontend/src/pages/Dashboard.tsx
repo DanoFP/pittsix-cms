@@ -33,11 +33,26 @@ export default function Dashboard() {
     fetchArticles();
   };
 
-  const handleCopyLink = (id: string) => {
-    const url = window.location.origin + "/articles/" + id;
-    navigator.clipboard.writeText(url);
-    alert("🔗 Enlace copiado al portapapeles");
+  const handleCopyLink = (articleId: string) => {
+    const baseUrl = window.location.origin; // Ej: http://pittsix.com
+    const fullUrl = `${baseUrl}/articles/${articleId}`;
+  
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(fullUrl)
+        .then(() => alert("Link copiado al portapapeles!"))
+        .catch((err) => console.error("Error copiando:", err));
+    } else {
+      const input = document.createElement("input");
+      input.value = fullUrl;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      document.body.removeChild(input);
+      alert("Link copiado (fallback)");
+    }
   };
+  
+  
 
   useEffect(() => {
     fetchArticles();
