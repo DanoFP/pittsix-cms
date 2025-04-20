@@ -9,6 +9,8 @@ import CreateArticle from "./pages/CreateArticle";
 import EditArticle from "./pages/EditArticle";
 import { AuthProvider } from "./auth/AuthContext";
 import PrivateRoute from "./auth/PrivateRoute";
+import './i18n' // 👈 Importante
+
 
 function App() {
   return (
