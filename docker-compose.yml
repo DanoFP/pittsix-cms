@@ -82,7 +82,7 @@ services:
       MINIO_SECRET_KEY: minio123
     command: server /data --console-address ":9001"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/ready"]
+      test: ["CMD", "curl", "-f", "http://3.137.192.116:9000/minio/health/ready"]
       interval: 10s
       timeout: 5s
       retries: 5

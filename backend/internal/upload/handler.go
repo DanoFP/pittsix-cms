@@ -61,7 +61,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	publicURL := fmt.Sprintf("http://localhost:9000/mybucket/%s", objectName)
+	publicURL := fmt.Sprintf("http://3.137.192.116:9000/mybucket/%s", objectName)
 
 	log.Printf("✅ Archivo subido: %+v", uploadInfo)
 
