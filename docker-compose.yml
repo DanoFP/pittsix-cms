@@ -32,7 +32,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: http://3.137.192.116:8080
+        VITE_API_URL: https://pittsix.com/api
     ports:
       - "3000:80"   # 👈 CAMBIADO: ahora en el host es 3000
     depends_on:
