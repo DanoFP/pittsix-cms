@@ -34,7 +34,7 @@ services:
       args:
         VITE_API_URL: http://3.137.192.116:8080
     ports:
-      - "80:80"
+      - "3000:80"   # 👈 CAMBIADO: ahora en el host es 3000
     depends_on:
       - backend
 
