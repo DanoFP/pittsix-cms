@@ -12,4 +12,5 @@ func RegisterHandlers(mux *http.ServeMux) {
 	mux.Handle("GET /my-articles", middleware.JWTAuth(http.HandlerFunc(GetMyArticlesHandler)))
 	mux.Handle("PUT /articles/{id}", middleware.JWTAuth(http.HandlerFunc(UpdateArticleHandler)))
 	mux.Handle("DELETE /articles/{id}", middleware.JWTAuth(http.HandlerFunc(DeleteArticleHandler)))
+	mux.HandleFunc("GET /articles/slug/{slug}", GetArticleBySlugHandler)
 }

@@ -5,8 +5,11 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
+
+	"pittsix/internal/users"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -15,21 +18,36 @@ import (
 
 // 🌱 Mongo Collection
 var Collection *mongo.Collection
+var userRepo users.Repository
 
 // 🛠️ Inicializar desde main.go
-func Init(collection *mongo.Collection) {
+func Init(collection *mongo.Collection, uRepo users.Repository) {
 	Collection = collection
+	userRepo = uRepo
 }
 
 // 🧱 Modelo de artículo
 type Article struct {
-	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	Title     string             `bson:"title" json:"title"`
-	Content   string             `bson:"content" json:"content"`
-	Image     string             `bson:"image,omitempty" json:"image,omitempty"`
-	AuthorID  int                `bson:"author_id" json:"author_id"`
-	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
-	UpdatedAt time.Time          `bson:"updated_at" json:"updated_at"`
+	ID         primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Title      string             `bson:"title" json:"title"`
+	Content    string             `bson:"content" json:"content"`
+	Image      string             `bson:"image,omitempty" json:"image,omitempty"`
+	Slug       string             `bson:"slug" json:"slug"`
+	AuthorID   primitive.ObjectID `bson:"author_id" json:"author_id"`
+	AuthorName string             `bson:"author_name" json:"author_name"`
+	Status     string             `bson:"status" json:"status"`
+	CreatedAt  time.Time          `bson:"created_at" json:"created_at"`
+	UpdatedAt  time.Time          `bson:"updated_at" json:"updated_at"`
+}
+
+// GenerateSlug genera un slug amigable a partir del título
+func GenerateSlug(title string) string {
+	slug := strings.ToLower(title)
+	slug = strings.ReplaceAll(slug, " ", "-")
+	slug = strings.ReplaceAll(slug, "_", "-")
+	slug = regexp.MustCompile(`[^a-z0-9-]+`).ReplaceAllString(slug, "")
+	slug = strings.Trim(slug, "-")
+	return slug
 }
 
 // 📥 Crear artículo (requiere JWT)
@@ -43,10 +61,30 @@ func CreateArticleHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := r.Context().Value("user_id").(int)
-	article.AuthorID = userID
+	userIDStr, ok := r.Context().Value("user_id").(string)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	userObjID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		http.Error(w, "Invalid user id", http.StatusBadRequest)
+		return
+	}
+	article.AuthorID = userObjID
+
+	// Buscar nombre del autor usando el repo global
+	user, err := userRepo.GetUserByID(userObjID)
+	if err == nil && user != nil {
+		article.AuthorName = user.FirstName + " " + user.LastName
+	}
+
 	article.CreatedAt = time.Now()
 	article.UpdatedAt = time.Now()
+	article.Slug = GenerateSlug(article.Title)
+	if article.Status == "" {
+		article.Status = "draft"
+	}
 
 	res, err := Collection.InsertOne(context.Background(), article)
 	if err != nil {
@@ -84,8 +122,17 @@ func ListArticlesHandler(w http.ResponseWriter, r *http.Request) {
 
 // 🙋 Listar solo artículos del usuario (requiere JWT)
 func GetMyArticlesHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(int)
-	cursor, err := Collection.Find(context.Background(), bson.M{"author_id": userID})
+	userIDStr, ok := r.Context().Value("user_id").(string)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	userObjID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		http.Error(w, "Invalid user id", http.StatusBadRequest)
+		return
+	}
+	cursor, err := Collection.Find(context.Background(), bson.M{"author_id": userObjID})
 	if err != nil {
 		log.Println(err.Error())
 		http.Error(w, "DB error", http.StatusInternalServerError)
@@ -115,7 +162,16 @@ func UpdateArticleHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := r.Context().Value("user_id").(int)
+	userIDStr, ok := r.Context().Value("user_id").(string)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	userObjID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		http.Error(w, "Invalid user id", http.StatusBadRequest)
+		return
+	}
 
 	var payload Article
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
@@ -124,11 +180,15 @@ func UpdateArticleHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	filter := bson.M{"_id": objID, "author_id": userID}
+	newSlug := GenerateSlug(payload.Title)
+
+	filter := bson.M{"_id": objID, "author_id": userObjID}
 	update := bson.M{"$set": bson.M{
 		"title":      payload.Title,
 		"content":    payload.Content,
 		"image":      payload.Image,
+		"slug":       newSlug,
+		"status":     payload.Status,
 		"updated_at": time.Now(),
 	}}
 
@@ -153,10 +213,19 @@ func DeleteArticleHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := r.Context().Value("user_id").(int)
+	userIDStr, ok := r.Context().Value("user_id").(string)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	userObjID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		http.Error(w, "Invalid user id", http.StatusBadRequest)
+		return
+	}
 	res, err := Collection.DeleteOne(context.Background(), bson.M{
 		"_id":       objID,
-		"author_id": userID,
+		"author_id": userObjID,
 	})
 
 	if err != nil {
@@ -195,6 +264,19 @@ func GetArticleByIDHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(article)
+}
+
+// Handler para buscar artículo por slug
+func GetArticleBySlugHandler(w http.ResponseWriter, r *http.Request) {
+	slug := r.PathValue("slug")
+	var article Article
+	err := Collection.FindOne(context.Background(), bson.M{"slug": slug}).Decode(&article)
+	if err != nil {
+		http.Error(w, "Article not found", http.StatusNotFound)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(article)
 }

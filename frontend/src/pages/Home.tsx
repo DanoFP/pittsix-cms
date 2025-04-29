@@ -6,6 +6,10 @@ import NavBar from "../components/NavBar";
 import { useState, useEffect } from "react";
 import Jumbotron3D from "../components/Jumbotron3D";
 import ContactForm from "../components/ContactForm";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+import { Helmet } from "react-helmet-async";
+import { FacebookShareButton, LinkedinShareButton, TwitterShareButton } from "react-share";
 
 export default function Home() {
   const { t, i18n } = useTranslation();
@@ -82,6 +86,10 @@ export default function Home() {
       
       {/* Otras secciones seguirían normalmente */}
       {/* Servicios, Métricas, Contacto, etc... */}
+
+      {/* <FacebookShareButton url={window.location.href} quote={article.title} />
+      <LinkedinShareButton url={window.location.href} title={article.title} />
+      <TwitterShareButton url={window.location.href} title={article.title} /> */}
     </main>
   );
 }

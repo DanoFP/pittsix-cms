@@ -19,10 +19,13 @@ func CheckPassword(password, hash, pepper string) bool {
 	return err == nil
 }
 
-func GenerateJWT(userID int) (string, error) {
+func GenerateJWT(userID, orgID string, roles, permissions []string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": userID,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(),
+		"user_id":         userID,
+		"organization_id": orgID,
+		"roles":           roles,
+		"permissions":     permissions,
+		"exp":             time.Now().Add(time.Hour * 24).Unix(),
 	})
 	return token.SignedString(jwtKey)
 }

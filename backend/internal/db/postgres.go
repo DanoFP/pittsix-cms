@@ -48,11 +48,28 @@ func InitPostgres() *sql.DB {
             id SERIAL PRIMARY KEY,
             email TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            first_name TEXT,
+            last_name TEXT,
+            bio TEXT,
+            profile_image TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     `)
 	if err != nil {
 		log.Fatalf("❌ Error creando tabla users: %v", err)
+	}
+
+	// Agregar columnas si no existen (para migraciones en bases ya creadas)
+	columns := []struct{ name, typ string }{
+		{"first_name", "TEXT"},
+		{"last_name", "TEXT"},
+		{"bio", "TEXT"},
+		{"profile_image", "TEXT"},
+		{"updated_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"},
+	}
+	for _, col := range columns {
+		_, _ = db.Exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS " + col.name + " " + col.typ)
 	}
 
 	log.Println("✅ PostgreSQL inicializado correctamente")

@@ -32,8 +32,30 @@ func JWTAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		userID := int(claims["user_id"].(float64))
+		userID, ok := claims["user_id"].(string)
+		if !ok {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		orgID, _ := claims["organization_id"].(string)
+		roles, _ := claims["roles"].([]interface{})
+		permissions, _ := claims["permissions"].([]interface{})
+		// Convert []interface{} a []string
+		var rolesStr, permsStr []string
+		for _, r := range roles {
+			if s, ok := r.(string); ok {
+				rolesStr = append(rolesStr, s)
+			}
+		}
+		for _, p := range permissions {
+			if s, ok := p.(string); ok {
+				permsStr = append(permsStr, s)
+			}
+		}
 		ctx := context.WithValue(r.Context(), "user_id", userID)
+		ctx = context.WithValue(ctx, "organization_id", orgID)
+		ctx = context.WithValue(ctx, "roles", rolesStr)
+		ctx = context.WithValue(ctx, "permissions", permsStr)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
