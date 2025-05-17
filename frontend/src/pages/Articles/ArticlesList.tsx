@@ -7,17 +7,19 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useAuth } from '../../auth/AuthContext';
 import { Link } from 'react-router-dom';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import { useTheme } from "../../theme/ThemeContext";
+import GenericDataTable from '../../components/GenericDataTable';
 
 const statusOptions = [
   { value: 'draft', label: 'Borrador' },
   { value: 'published', label: 'Publicado' },
 ];
 
-const columnsBase: GridColDef[] = [
-  { field: 'id', headerName: 'ID', width: 90 },
-  { field: 'author', headerName: 'Autor', flex: 1 },
-  { field: 'status', headerName: 'Estado', width: 120 },
-  { field: 'created_at', headerName: 'Fecha', width: 140, valueGetter: (params: any) => params.value ? new Date(params.value * 1000).toLocaleDateString() : '-' },
+const columnsBase: (GridColDef & { hideOnMobile?: boolean })[] = [
+  { field: 'id', headerName: 'ID', width: 90, hideOnMobile: true },
+  { field: 'author', headerName: 'Autor', flex: 1, hideOnMobile: true },
+  { field: 'status', headerName: 'Estado', width: 120, hideOnMobile: true },
+  { field: 'created_at', headerName: 'Fecha', width: 140, valueGetter: (params: any) => params.value ? new Date(params.value * 1000).toLocaleDateString() : '-', hideOnMobile: true },
 ];
 
 export default function ArticlesList() {
@@ -33,6 +35,7 @@ export default function ArticlesList() {
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean, articleId: string, articleTitle: string }>({ open: false, articleId: '', articleTitle: '' });
   const [deleting, setDeleting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const { theme } = useTheme();
 
   const fetchArticles = () => {
     setLoading(true);
@@ -149,9 +152,9 @@ export default function ArticlesList() {
       flex: 1,
       renderCell: (params) => (
         params.row._id ? (
-          <Link to={`/article/${params.row._id}`} style={{ fontWeight: 600, color: '#1976d2', textDecoration: 'none' }} target="_blank" rel="noopener">
+          <Box component={Link} to={`/article/${params.row._id}`} target="_blank" rel="noopener" sx={{ fontWeight: 600, textDecoration: 'none' }}>
             {params.value}
-          </Link>
+          </Box>
         ) : (
           <span>{params.value}</span>
         )
@@ -202,115 +205,111 @@ export default function ArticlesList() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
-        <Typography variant="h4" fontWeight={700}>Artículos</Typography>
-        <Button variant="contained" color="primary" onClick={handleOpen}>Nuevo Artículo</Button>
-      </Box>
-      <Paper elevation={2} sx={{ height: 480 }}>
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          loading={loading}
-          pageSizeOptions={[7, 15, 30]}
-          disableRowSelectionOnClick
-          sx={{ border: 0, fontSize: 16, background: 'white' }}
-        />
-      </Paper>
-      {/* Alta/Edición Modal */}
-      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>{editMode ? 'Editar Artículo' : 'Nuevo Artículo'}</DialogTitle>
-        <DialogContent>
-          <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField
-              label="Título"
-              name="title"
-              value={form.title}
-              onChange={handleChange}
-              required
-              fullWidth
-            />
-            <TextField
-              label="Contenido"
-              name="content"
-              value={form.content}
-              onChange={handleChange}
-              required
-              fullWidth
-              multiline
-              minRows={4}
-            />
-            <Box>
-              <Button
-                variant="outlined"
-                component="label"
-                startIcon={<CloudUploadIcon />}
-                disabled={uploading}
-                sx={{ mb: 1 }}
+      <GenericDataTable
+        title="Artículos"
+        subtitle="Gestión de artículos del sistema"
+        rows={rows}
+        columns={columns}
+        loading={loading}
+        buttonLabel="Nuevo Artículo"
+        onButtonClick={handleOpen}
+      >
+        {/* Alta/Edición Modal */}
+        <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+          <DialogTitle>{editMode ? 'Editar Artículo' : 'Nuevo Artículo'}</DialogTitle>
+          <DialogContent>
+            <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+              <TextField
+                label="Título"
+                name="title"
+                value={form.title}
+                onChange={handleChange}
+                required
+                fullWidth
+              />
+              <TextField
+                label="Contenido"
+                name="content"
+                value={form.content}
+                onChange={handleChange}
+                required
+                fullWidth
+                multiline
+                minRows={4}
+              />
+              <Box>
+                <Button
+                  variant="outlined"
+                  component="label"
+                  startIcon={<CloudUploadIcon />}
+                  disabled={uploading}
+                  sx={{ mb: 1 }}
+                >
+                  {uploading ? 'Subiendo...' : 'Subir imagen'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={handleImageUpload}
+                  />
+                </Button>
+                {form.image && (
+                  <Box mt={1}>
+                    <img src={form.image} alt="Vista previa" style={{ maxWidth: 180 }} />
+                  </Box>
+                )}
+              </Box>
+              <TextField
+                select
+                label="Estado"
+                name="status"
+                value={form.status}
+                onChange={handleStatusChange}
+                required
+                fullWidth
               >
-                {uploading ? 'Subiendo...' : 'Subir imagen'}
-                <input
-                  type="file"
-                  accept="image/*"
-                  hidden
-                  onChange={handleImageUpload}
-                />
-              </Button>
-              {form.image && (
-                <Box mt={1}>
-                  <img src={form.image} alt="Vista previa" style={{ maxWidth: 180, borderRadius: 8 }} />
-                </Box>
-              )}
+                {statusOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                label="Autor"
+                name="author"
+                value={form.author}
+                disabled
+                fullWidth
+              />
+              {formError && <Alert severity="error">{formError}</Alert>}
+              <DialogActions sx={{ px: 0 }}>
+                <Button onClick={handleClose} disabled={saving}>Cancelar</Button>
+                <Button type="submit" variant="contained" color="primary" disabled={saving} startIcon={saving && <CircularProgress size={18} />}>
+                  {editMode ? 'Guardar cambios' : 'Guardar'}
+                </Button>
+              </DialogActions>
             </Box>
-            <TextField
-              select
-              label="Estado"
-              name="status"
-              value={form.status}
-              onChange={handleStatusChange}
-              required
-              fullWidth
-            >
-              {statusOptions.map((option) => (
-                <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              label="Autor"
-              name="author"
-              value={form.author}
-              disabled
-              fullWidth
-            />
-            {formError && <Alert severity="error">{formError}</Alert>}
-            <DialogActions sx={{ px: 0 }}>
-              <Button onClick={handleClose} disabled={saving}>Cancelar</Button>
-              <Button type="submit" variant="contained" color="primary" disabled={saving} startIcon={saving && <CircularProgress size={18} />}>
-                {editMode ? 'Guardar cambios' : 'Guardar'}
-              </Button>
-            </DialogActions>
-          </Box>
-        </DialogContent>
-      </Dialog>
-      {/* Eliminar Modal */}
-      <Dialog open={deleteDialog.open} onClose={handleDeleteCancel} maxWidth="xs" fullWidth>
-        <DialogTitle>Eliminar Artículo</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            ¿Estás seguro que deseas eliminar el artículo <b>{deleteDialog.articleTitle}</b>? Esta acción no se puede deshacer.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteCancel} disabled={deleting}>Cancelar</Button>
-          <Button onClick={handleDeleteConfirm} color="error" variant="contained" disabled={deleting} startIcon={deleting && <CircularProgress size={18} />}>
-            Eliminar
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <Snackbar open={snackbar.open} autoHideDuration={3500} onClose={() => setSnackbar({ ...snackbar, open: false })}>
-        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })} sx={{ width: '100%' }}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+          </DialogContent>
+        </Dialog>
+        {/* Eliminar Modal */}
+        <Dialog open={deleteDialog.open} onClose={handleDeleteCancel} maxWidth="xs" fullWidth>
+          <DialogTitle>Eliminar Artículo</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              ¿Estás seguro que deseas eliminar el artículo <b>{deleteDialog.articleTitle}</b>? Esta acción no se puede deshacer.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleDeleteCancel} disabled={deleting}>Cancelar</Button>
+            <Button onClick={handleDeleteConfirm} color="error" variant="contained" disabled={deleting} startIcon={deleting && <CircularProgress size={18} />}>
+              Eliminar
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Snackbar open={snackbar.open} autoHideDuration={3500} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+          <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })} sx={{ width: '100%' }}>
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </GenericDataTable>
     </Container>
   );
 } 

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Container, Typography, Box, TextField, Button, Avatar, Snackbar, Alert, CircularProgress } from '@mui/material';
+import { Container, Typography, Box, TextField, Button, Avatar, Snackbar, Alert, CircularProgress, Paper, Divider } from '@mui/material';
 import { useAuth } from '../auth/AuthContext';
 import API from '../api/axios';
+import { useNavigate } from 'react-router-dom';
 
 export default function ProfileView() {
   const { user, token } = useAuth() as any;
@@ -13,6 +14,7 @@ export default function ProfileView() {
   });
   const [saving, setSaving] = useState(false);
   const [snackbar, setSnackbar] = useState<{ open: boolean, message: string, severity: 'success' | 'error' }>({ open: false, message: '', severity: 'success' });
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -38,50 +40,44 @@ export default function ProfileView() {
     }
   };
 
+  const logout = () => {
+    // Implementa la lógica para cerrar sesión
+  };
+
   return (
     <Container maxWidth="sm" sx={{ py: 6 }}>
-      <Box display="flex" flexDirection="column" alignItems="center" mb={4}>
-        <Avatar src={form.profileImage} sx={{ width: 80, height: 80, mb: 2 }} />
-        <Typography variant="h5" fontWeight={700} gutterBottom>Mi Perfil</Typography>
-        <Typography variant="body1" color="text.secondary">{user?.email}</Typography>
-      </Box>
-      <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        <TextField
-          label="Nombre"
-          name="firstName"
-          value={form.firstName}
-          onChange={handleChange}
-          required
-          fullWidth
-        />
-        <TextField
-          label="Apellido"
-          name="lastName"
-          value={form.lastName}
-          onChange={handleChange}
-          required
-          fullWidth
-        />
-        <TextField
-          label="Bio"
-          name="bio"
-          value={form.bio}
-          onChange={handleChange}
-          multiline
-          minRows={2}
-          fullWidth
-        />
-        <TextField
-          label="URL de foto de perfil"
-          name="profileImage"
-          value={form.profileImage}
-          onChange={handleChange}
-          fullWidth
-        />
-        <Button type="submit" variant="contained" color="primary" size="large" disabled={saving} startIcon={saving && <CircularProgress size={18} />}>
-          Guardar cambios
-        </Button>
-      </Box>
+      <Paper elevation={3}>
+        <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+          <Avatar src={user.avatar} alt={user.name} sx={{ width: 96, height: 96, fontSize: 40 }}>
+            {user.name?.[0] || user.first_name?.[0] || '?'}
+          </Avatar>
+          <Typography variant="h5" fontWeight={700} align="center">
+            {user.name || `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Sin nombre'}
+          </Typography>
+          <Typography variant="body1" align="center">
+            {user.email}
+          </Typography>
+          {user.bio && (
+            <Typography variant="body2" align="center" sx={{ mt: 1 }}>
+              {user.bio}
+            </Typography>
+          )}
+          {user.roles && Array.isArray(user.roles) && user.roles.length > 0 && (
+            <Typography variant="caption" align="center" sx={{ mt: 1 }}>
+              {user.roles.join(', ')}
+            </Typography>
+          )}
+        </Box>
+        <Divider sx={{ my: 3 }} />
+        <Box display="flex" justifyContent="center" gap={2}>
+          <Button variant="contained" color="primary" onClick={() => navigate('/dashboard/profile/edit')}>
+            Editar perfil
+          </Button>
+          <Button variant="outlined" color="primary" onClick={logout}>
+            Cerrar sesión
+          </Button>
+        </Box>
+      </Paper>
       <Snackbar open={snackbar.open} autoHideDuration={3500} onClose={() => setSnackbar({ ...snackbar, open: false })}>
         <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })} sx={{ width: '100%' }}>
           {snackbar.message}

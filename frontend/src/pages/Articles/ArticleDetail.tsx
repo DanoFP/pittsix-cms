@@ -43,10 +43,8 @@ export default function PublicArticleDetail() {
           width: '100%',
           height: { xs: 220, md: 340 },
           mb: 3,
-          borderRadius: 4,
           overflow: 'hidden',
           boxShadow: 3,
-          backgroundColor: '#e0e7ef',
         }}
       >
         {article.image && (
@@ -73,13 +71,11 @@ export default function PublicArticleDetail() {
             left: 0,
             width: '100%',
             height: '100%',
-            bgcolor: 'rgba(0,0,0,0.45)',
             zIndex: 2,
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
-            color: 'white',
             textAlign: 'center',
             px: 2,
           }}
@@ -89,7 +85,7 @@ export default function PublicArticleDetail() {
           </Typography>
           <Box display="flex" gap={2} alignItems="center" justifyContent="center" mb={1}>
             <Chip label={article.status === 'published' ? 'Publicado' : 'Borrador'} color={article.status === 'published' ? 'success' : 'default'} sx={{ fontWeight: 700 }} />
-            <Typography variant="body1" sx={{ color: 'white', opacity: 0.85 }}>
+            <Typography variant="body1">
               {article.created_at ? new Date(article.created_at).toLocaleDateString() : ''}
             </Typography>
           </Box>
@@ -103,7 +99,7 @@ export default function PublicArticleDetail() {
             href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`}
             target="_blank"
             rel="noopener"
-            sx={{ bgcolor: '#0077b5', color: 'white', '&:hover': { bgcolor: '#005983' }, width: 56, height: 56 }}
+            sx={{ width: 56, height: 56 }}
           >
             <LinkedInIcon fontSize="large" />
           </IconButton>
@@ -114,7 +110,7 @@ export default function PublicArticleDetail() {
             href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${shareText}`}
             target="_blank"
             rel="noopener"
-            sx={{ bgcolor: '#1da1f2', color: 'white', '&:hover': { bgcolor: '#0d8ddb' }, width: 56, height: 56 }}
+            sx={{ width: 56, height: 56 }}
           >
             <TwitterIcon fontSize="large" />
           </IconButton>
@@ -125,7 +121,7 @@ export default function PublicArticleDetail() {
             href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
             target="_blank"
             rel="noopener"
-            sx={{ bgcolor: '#4267B2', color: 'white', '&:hover': { bgcolor: '#314d86' }, width: 56, height: 56 }}
+            sx={{ width: 56, height: 56 }}
           >
             <FacebookIcon fontSize="large" />
           </IconButton>
@@ -134,15 +130,14 @@ export default function PublicArticleDetail() {
       {/* Autor y contenido */}
       <Container maxWidth="md" sx={{ py: 2 }}>
         <Box display="flex" alignItems="center" gap={2} mb={3}>
-          <Avatar src={article.author_avatar || undefined} alt={authorName} sx={{ width: 64, height: 64, fontSize: 32, bgcolor: 'primary.main' }}>
+          <Avatar src={article.author_avatar || undefined} alt={authorName} sx={{ width: 64, height: 64, fontSize: 32 }}>
             {authorName[0]}
           </Avatar>
           <Box>
             <Typography variant="h6" fontWeight={700}>{authorName}</Typography>
-            {/* Aquí podrías agregar bio del autor si está disponible */}
           </Box>
         </Box>
-        <Box mt={2} mb={4} sx={{ background: 'white', borderRadius: 3, boxShadow: 2, p: { xs: 2, md: 4 } }}>
+        <Box mt={2} mb={4} sx={{ boxShadow: 2, p: { xs: 2, md: 4 } }}>
           <Typography variant="body1" sx={{ whiteSpace: 'pre-line', fontSize: 20, lineHeight: 1.7 }}>
             {article.content}
           </Typography>

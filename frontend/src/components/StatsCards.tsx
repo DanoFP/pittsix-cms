@@ -1,14 +1,34 @@
 import { Book, Users, File } from "lucide-react";
 import { useTheme } from "../theme/ThemeContext";
 
-const stats = [
-  { label: "Artículos", value: 0, icon: Book, color: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200" },
-  { label: "Usuarios", value: 0, icon: Users, color: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200" },
-  { label: "Archivos", value: 0, icon: File, color: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200" },
-];
-
-export default function StatsCards({ data = {} }) {
+export default function StatsCards({ data = {} }: { data?: Record<string, any> }) {
   const { theme } = useTheme();
+  const stats = [
+    {
+      label: "Artículos",
+      value: 0,
+      icon: Book,
+      color: theme === "dark"
+        ? "bg-blue-900 text-blue-200"
+        : "bg-blue-100 text-blue-700"
+    },
+    {
+      label: "Usuarios",
+      value: 0,
+      icon: Users,
+      color: theme === "dark"
+        ? "bg-green-900 text-green-200"
+        : "bg-green-100 text-green-700"
+    },
+    {
+      label: "Archivos",
+      value: 0,
+      icon: File,
+      color: theme === "dark"
+        ? "bg-purple-900 text-purple-200"
+        : "bg-purple-100 text-purple-700"
+    },
+  ];
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
       {stats.map(({ label, icon: Icon, color }) => (
@@ -18,8 +38,8 @@ export default function StatsCards({ data = {} }) {
             <Icon size={28} />
           </div>
           <div>
-            <div className={`text-2xl font-bold ${theme === "dark" ? "text-gray-100" : "text-gray-800"}`}>{data[label.toLowerCase()] ?? 0}</div>
-            <div className={`text-gray-500 font-medium ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>{label}</div>
+            <div className={`text-2xl font-bold `}>{data[label.toLowerCase()] ?? 0}</div>
+            <div className={`text-gray-500 font-medium`}>{label}</div>
           </div>
         </div>
       ))}

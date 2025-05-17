@@ -39,65 +39,57 @@ export default function AuthPage() {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <Container maxWidth="xs">
-        <Paper elevation={4} sx={{ p: 4, borderRadius: 3 }}>
-          <Tabs
-            value={tab}
-            onChange={(_, v) => { setTab(v); setError(""); reset(); }}
-            variant="fullWidth"
-            sx={{ mb: 3 }}
-          >
-            <Tab label="Iniciar sesión" value="login" />
-            <Tab label="Registrarse" value="register" />
-          </Tabs>
-          <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Paper elevation={4}>
+        <Typography variant="h4" align="center" gutterBottom sx={{ mb: 3 }}>
+          Iniciar sesión
+        </Typography>
+        <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <TextField
+            label="Email"
+            type="email"
+            fullWidth
+            {...register("email", { required: "El email es obligatorio" })}
+            error={!!errors.email}
+            helperText={errors.email?.message as string}
+            autoComplete="email"
+          />
+          <TextField
+            label="Contraseña"
+            type="password"
+            fullWidth
+            {...register("password", { required: "La contraseña es obligatoria" })}
+            error={!!errors.password}
+            helperText={errors.password?.message as string}
+            autoComplete={tab === "login" ? "current-password" : "new-password"}
+          />
+          {tab === "register" && (
             <TextField
-              label="Email"
-              type="email"
-              fullWidth
-              {...register("email", { required: "El email es obligatorio" })}
-              error={!!errors.email}
-              helperText={errors.email?.message as string}
-              autoComplete="email"
-            />
-            <TextField
-              label="Contraseña"
+              label="Confirmar contraseña"
               type="password"
               fullWidth
-              {...register("password", { required: "La contraseña es obligatoria" })}
-              error={!!errors.password}
-              helperText={errors.password?.message as string}
-              autoComplete={tab === "login" ? "current-password" : "new-password"}
+              {...register("confirmPassword", {
+                required: "Confirma tu contraseña",
+                validate: (value: string) => value === watch("password") || "Las contraseñas no coinciden"
+              })}
+              error={!!errors.confirmPassword}
+              helperText={errors.confirmPassword?.message as string}
+              autoComplete="new-password"
             />
-            {tab === "register" && (
-              <TextField
-                label="Confirmar contraseña"
-                type="password"
-                fullWidth
-                {...register("confirmPassword", {
-                  required: "Confirma tu contraseña",
-                  validate: (value: string) => value === watch("password") || "Las contraseñas no coinciden"
-                })}
-                error={!!errors.confirmPassword}
-                helperText={errors.confirmPassword?.message as string}
-                autoComplete="new-password"
-              />
-            )}
-            {error && <Alert severity="error">{error}</Alert>}
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              size="large"
-              sx={{ mt: 1, fontWeight: 600, letterSpacing: 1 }}
-              fullWidth
-            >
-              {tab === "login" ? "Entrar" : "Registrarse"}
-            </Button>
-          </Box>
-        </Paper>
-      </Container>
+          )}
+          {error && <Alert severity="error">{error}</Alert>}
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            size="large"
+            sx={{ mt: 1, fontWeight: 600, letterSpacing: 1 }}
+            fullWidth
+          >
+            {tab === "login" ? "Entrar" : "Registrarse"}
+          </Button>
+        </Box>
+      </Paper>
     </Box>
   );
 } 

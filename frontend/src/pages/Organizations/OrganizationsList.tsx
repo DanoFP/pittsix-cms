@@ -4,12 +4,13 @@ import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import API from '../../api/axios';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { useTheme } from "../../theme/ThemeContext";
 
-const columnsBase: GridColDef[] = [
-  { field: 'id', headerName: 'ID', width: 90 },
+const columnsBase: (GridColDef & { hideOnMobile?: boolean })[] = [
+  { field: 'id', headerName: 'ID', width: 90, hideOnMobile: true },
   { field: 'name', headerName: 'Nombre', flex: 1 },
   { field: 'description', headerName: 'Descripción', flex: 2 },
-  { field: 'logo', headerName: 'Logo', width: 100, renderCell: (params) => params.value ? <img src={params.value} alt="logo" style={{ width: 40, height: 40, borderRadius: 8 }} /> : '-' },
+  { field: 'logo', headerName: 'Logo', width: 100, renderCell: (params) => params.value ? <img src={params.value} alt="logo" style={{ width: 40, height: 40 }} /> : '-', hideOnMobile: true },
 ];
 
 export default function OrganizationsList() {
@@ -23,6 +24,7 @@ export default function OrganizationsList() {
   const [snackbar, setSnackbar] = useState<{ open: boolean, message: string, severity: 'success' | 'error' }>({ open: false, message: '', severity: 'success' });
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean, orgId: string, orgName: string }>({ open: false, orgId: '', orgName: '' });
   const [deleting, setDeleting] = useState(false);
+  const { theme } = useTheme();
 
   const fetchOrgs = () => {
     setLoading(true);
@@ -147,19 +149,29 @@ export default function OrganizationsList() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
-        <Typography variant="h4" fontWeight={700}>Organizaciones</Typography>
-        <Button variant="contained" color="primary" onClick={handleOpen}>Nueva Organización</Button>
-      </Box>
-      <Paper elevation={2} sx={{ height: 480 }}>
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          loading={loading}
-          pageSizeOptions={[7, 15, 30]}
-          disableRowSelectionOnClick
-          sx={{ border: 0, fontSize: 16, background: 'white' }}
-        />
+      <Paper elevation={2} sx={{ p: 0 }}>
+        <Box display="flex" alignItems="center" justifyContent="space-between" px={3} py={2} borderBottom={1} borderColor="divider">
+          <Box>
+            <Typography variant="h6" fontWeight={600} color={theme === "dark" ? "text.primary" : "text.secondary"} gutterBottom>
+              Organizaciones
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Gestión de organizaciones del sistema
+            </Typography>
+          </Box>
+          <Button variant="contained" color="primary" onClick={handleOpen} size="small">
+            Nueva Organización
+          </Button>
+        </Box>
+        <Box px={3} py={2}>
+          <DataGrid
+            rows={rows}
+            columns={columns}
+            loading={loading}
+            pageSizeOptions={[7, 15, 30]}
+            disableRowSelectionOnClick
+          />
+        </Box>
       </Paper>
       {/* Alta/Edición Modal */}
       <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
